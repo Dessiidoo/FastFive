@@ -52,8 +52,6 @@ const AnalysisPage: React.FC<AnalysisPageProps> = ({ searchQuery, onAnalysisComp
       } catch (error) {
         console.error('GitHub API Error:', error);
         setError(error instanceof Error ? error.message : 'An unknown error occurred');
-      }
-    };
 
     runAnalysis();
   }, [searchQuery, onAnalysisComplete]);
