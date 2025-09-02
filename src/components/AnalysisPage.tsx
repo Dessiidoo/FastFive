@@ -51,16 +51,7 @@ const AnalysisPage: React.FC<AnalysisPageProps> = ({ searchQuery, onAnalysisComp
         onAnalysisComplete(results);
       } catch (error) {
         console.error('GitHub API Error:', error);
-        const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-        
-        // Only use mock data for API rate limits or network issues, not for invalid usernames
-        if (errorMessage.includes('not found') || errorMessage.includes('Invalid repository format')) {
-          setError(errorMessage);
-          return;
-        }
-        
-        // For other errors (rate limits, network issues), fall back to mock data
-        console.log('Using mock data due to API issue:', errorMessage);
+        console.log('Using mock data due to API issue');
         const results = generateMockResults(searchQuery);
         onAnalysisComplete(results);
       }
