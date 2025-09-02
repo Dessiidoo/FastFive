@@ -227,10 +227,15 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout, analysisResul
                       </div>
                       <button
                         onClick={() => handleApplyFixes(repo)}
-                        className="bg-gradient-to-r from-yellow-400 to-yellow-600 text-black px-6 py-2 rounded-lg font-bold hover:from-yellow-300 hover:to-yellow-500 transition-all flex items-center space-x-2"
+                        className={`px-6 py-2 rounded-lg font-bold transition-all flex items-center space-x-2 ${
+                          repo.name.includes('/') 
+                            ? 'bg-gradient-to-r from-yellow-400 to-yellow-600 text-black hover:from-yellow-300 hover:to-yellow-500' 
+                            : 'bg-gray-600 text-gray-300 cursor-not-allowed'
+                        }`}
+                        disabled={!repo.name.includes('/')}
                       >
                         <Play className="w-4 h-4" />
-                        <span>Apply Fixes</span>
+                        <span>{repo.name.includes('/') ? 'Apply Real Fixes' : 'Mock Data Only'}</span>
                       </button>
                     </div>
                     

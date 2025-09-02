@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { ArrowLeft, Search, Loader, Zap, Target, Shield } from 'lucide-react';
 import { AnalysisResult } from '../App';
 import { generateMockResults } from '../utils/mockData';
+import { analyzeRealRepositories } from '../services/githubApi';
 
 interface AnalysisPageProps {
   searchQuery: string;
@@ -43,9 +44,15 @@ const AnalysisPage: React.FC<AnalysisPageProps> = ({ searchQuery, onAnalysisComp
         totalDuration += stepDuration;
       }
 
-      // Generate mock results and complete analysis
-      const results = generateMockResults(searchQuery);
-      onAnalysisComplete(results);
+      // Try to get real GitHub data first, fallback to mock if it fails
+      try {
+        const results = await analyzeRealRepositories(searchQuery);
+        onAnalysisComplete(results);
+      } catch (error) {
+        console.log('Using mock data:', error);
+        const results = generateMockResults(searchQuery);
+        onAnalysisComplete(results);
+      }
     };
 
     runAnalysis();
