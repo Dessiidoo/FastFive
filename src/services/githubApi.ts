@@ -142,6 +142,11 @@ export const analyzeRealRepositories = async (searchQuery: string): Promise<Anal
         documentation: Math.floor(Math.random() * 60) + 20,
       }];
     } else {
+      // Validate that the search query is not an email address
+      if (searchQuery.includes('@')) {
+        throw new Error('GitHub usernames cannot contain "@" symbols. Please enter a valid GitHub username (e.g., "octocat") or repository (e.g., "owner/repo").');
+      }
+      
       // Username search - validate user exists first
       const userResponse = await fetch(`${GITHUB_API_BASE}/users/${searchQuery}`, {
         headers: {
