@@ -1,4 +1,4 @@
-import { Octokit } from '@octokit/rest';
+import Octokit from '@octokit/rest';
 import { AnalysisResult } from '../App';
 
 const GITHUB_API_BASE = 'https://api.github.com';
