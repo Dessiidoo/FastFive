@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { ArrowLeft, Search, Loader, Zap, Target, Shield } from 'lucide-react';
+import { ArrowLeft, Search, Loader, Zap, Target, Shield, AlertTriangle } from 'lucide-react';
 import { AnalysisResult } from '../App';
 import { generateMockResults } from '../utils/mockData';
 import { analyzeRealRepositories } from '../services/githubApi';
@@ -13,6 +13,7 @@ interface AnalysisPageProps {
 const AnalysisPage: React.FC<AnalysisPageProps> = ({ searchQuery, onAnalysisComplete, onBack }) => {
   const [progress, setProgress] = useState(0);
   const [currentStep, setCurrentStep] = useState(0);
+  const [error, setError] = useState<string | null>(null);
   
   const analysisSteps = [
     { icon: Search, text: 'Scanning repositories...', duration: 2000 },
@@ -49,7 +50,17 @@ const AnalysisPage: React.FC<AnalysisPageProps> = ({ searchQuery, onAnalysisComp
         const results = await analyzeRealRepositories(searchQuery);
         onAnalysisComplete(results);
       } catch (error) {
-        console.log('Using mock data:', error);
+        console.error('GitHub API Error:', error);
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+        
+        // Only use mock data for API rate limits or network issues, not for invalid usernames
+        if (errorMessage.includes('not found') || errorMessage.includes('Invalid repository format')) {
+          setError(errorMessage);
+          return;
+        }
+        
+        // For other errors (rate limits, network issues), fall back to mock data
+        console.log('Using mock data due to API issue:', errorMessage);
         const results = generateMockResults(searchQuery);
         onAnalysisComplete(results);
       }
@@ -59,6 +70,56 @@ const AnalysisPage: React.FC<AnalysisPageProps> = ({ searchQuery, onAnalysisComp
   }, [searchQuery, onAnalysisComplete]);
 
   const CurrentIcon = analysisSteps[currentStep]?.icon || Search;
+
+  // Show error state
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center px-6">
+        <div className="max-w-2xl mx-auto text-center">
+          {/* Back Button */}
+          <button
+            onClick={onBack}
+            className="absolute top-8 left-8 flex items-center space-x-2 text-gray-400 hover:text-yellow-400 transition-colors"
+          >
+            <ArrowLeft className="w-5 h-5" />
+            <span>Back</span>
+          </button>
+
+          {/* Error Display */}
+          <div className="mb-12">
+            <div className="w-32 h-32 mx-auto mb-8 bg-red-500/20 border border-red-500/30 rounded-full flex items-center justify-center">
+              <AlertTriangle className="w-16 h-16 text-red-400" />
+            </div>
+
+            <h1 className="text-4xl font-black text-white mb-4">
+              ANALYSIS FAILED
+            </h1>
+            
+            <div className="bg-red-500/20 border border-red-500/30 rounded-2xl p-6 mb-8">
+              <p className="text-red-300 text-lg font-medium">{error}</p>
+            </div>
+
+            <div className="bg-gradient-to-br from-gray-900/80 to-black/80 border border-yellow-500/20 rounded-2xl p-6">
+              <h3 className="text-xl font-bold text-white mb-4">Suggestions:</h3>
+              <ul className="text-gray-300 space-y-2 text-left">
+                <li>• Check that the GitHub username exists</li>
+                <li>• Ensure the repository is public</li>
+                <li>• Use format: username or owner/repository</li>
+                <li>• Try: microsoft/vscode or octocat</li>
+              </ul>
+            </div>
+
+            <button
+              onClick={onBack}
+              className="mt-8 bg-gradient-to-r from-yellow-400 to-yellow-600 text-black px-8 py-3 rounded-xl font-bold hover:from-yellow-300 hover:to-yellow-500 transition-all transform hover:scale-105"
+            >
+              Try Again
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center px-6">

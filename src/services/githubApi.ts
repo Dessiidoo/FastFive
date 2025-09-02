@@ -279,6 +279,12 @@ export const analyzeRealRepositories = async (searchQuery: string): Promise<Anal
       }
       
       const [owner, repo] = repoPath.split('/');
+      
+      // Validate that both owner and repo are provided
+      if (!owner || !repo) {
+        throw new Error('Invalid repository format. Use: owner/repository');
+      }
+      
       const { data } = await octokit.rest.repos.get({ owner, repo });
       
       return [{
@@ -312,11 +318,25 @@ export const analyzeRealRepositories = async (searchQuery: string): Promise<Anal
       }];
     } else {
       // Username search
+      // First validate that the user exists
+      try {
+        await octokit.rest.users.get({ username: searchQuery });
+      } catch (error: any) {
+        if (error.status === 404) {
+          throw new Error(`GitHub user '${searchQuery}' not found`);
+        }
+        throw error;
+      }
+      
       const { data: repos } = await octokit.rest.repos.listForUser({
         username: searchQuery,
         sort: 'updated',
         per_page: 10
       });
+      
+      if (repos.length === 0) {
+        throw new Error(`No public repositories found for user '${searchQuery}'`);
+      }
       
       return repos.map(repo => ({
         id: repo.id.toString(),
@@ -350,7 +370,13 @@ export const analyzeRealRepositories = async (searchQuery: string): Promise<Anal
     }
   } catch (error) {
     console.error('GitHub API Error:', error);
-    throw new Error('Failed to fetch repository data from GitHub');
+    
+    // Re-throw the error with the original message for better user feedback
+    if (error instanceof Error) {
+      throw error;
+    }
+    
+    throw new Error('Failed to connect to GitHub API');
   }
 };
 
