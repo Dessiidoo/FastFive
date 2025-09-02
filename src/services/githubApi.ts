@@ -32,7 +32,8 @@ interface GitHubRepo {
 const getOctokit = () => {
   const token = import.meta.env.VITE_GITHUB_TOKEN;
   if (!token) {
-    throw new Error('GitHub token not configured');
+    console.warn('GitHub token not configured, using public API');
+    return new Octokit();
   }
   return new Octokit({ auth: token });
 };
@@ -251,7 +252,6 @@ jobs:
 export const fetchGitHubUser = async (username: string): Promise<GitHubUser> => {
   const response = await fetch(`${GITHUB_API_BASE}/users/${username}`, {
     headers: {
-      'Authorization': `Bearer ${import.meta.env.VITE_GITHUB_TOKEN}`,
       'Accept': 'application/vnd.github.v3+json',
     },
   });
@@ -357,7 +357,6 @@ export const analyzeRealRepositories = async (searchQuery: string): Promise<Anal
 export const fetchUserRepositories = async (username: string): Promise<GitHubRepo[]> => {
   const response = await fetch(`${GITHUB_API_BASE}/users/${username}/repos?per_page=100&sort=updated`, {
     headers: {
-      'Authorization': `Bearer ${import.meta.env.VITE_GITHUB_TOKEN}`,
       'Accept': 'application/vnd.github.v3+json',
     },
   });
