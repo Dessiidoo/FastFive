@@ -24,7 +24,10 @@ const AdminLogin: React.FC<AdminLoginProps> = ({ onAuthenticated, onBack }) => {
     const adminEmail = 'admin@repodetective.com';
     const adminPassword = 'admin123';
 
-    if (email === adminEmail && password === adminPassword) {
+    const normalizedEmail = email.trim().toLowerCase();
+    const normalizedPassword = password.trim();
+
+    if (normalizedEmail === adminEmail && normalizedPassword === adminPassword) {
       onAuthenticated();
     } else {
       setError('Invalid credentials. Access denied.');
