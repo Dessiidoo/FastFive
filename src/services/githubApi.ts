@@ -79,138 +79,48 @@ export const fetchGitHubUser = async (username: string): Promise<GitHubUser> => 
 
 export const analyzeRealRepositories = async (searchQuery: string): Promise<AnalysisResult[]> => {
   try {
-    // Check if it's a direct repository URL or username
-    if (searchQuery.includes('/') || searchQuery.includes('github.com')) {
-      // Direct repository
-      const repoPath = searchQuery.includes('github.com') 
-        ? searchQuery.split('github.com/')[1]?.replace('.git', '') 
-        : searchQuery;
-      
-      if (!repoPath || !repoPath.includes('/')) {
-        throw new Error('Invalid repository format. Use: owner/repository');
-      }
-      
-      const [owner, repo] = repoPath.split('/');
-      
-      // Validate that both owner and repo are provided
-      if (!owner || !repo) {
-        throw new Error('Invalid repository format. Use: owner/repository');
-      }
-      
-      const response = await fetch(`${GITHUB_API_BASE}/repos/${owner}/${repo}`, {
-        headers: {
-          'Accept': 'application/vnd.github.v3+json',
-        },
-      });
+    const response = await fetch('/api/analyze', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ target: searchQuery }),
+    });
 
-      if (!response.ok) {
-        if (response.status === 404) {
-          throw new Error(`Repository '${owner}/${repo}' not found`);
-        }
-        throw new Error(`Failed to fetch repository: ${response.statusText}`);
-      }
-
-      const data = await response.json();
-      
-      return [{
-        id: data.id.toString(),
-        name: data.full_name,
-        description: data.description || 'No description available',
-        category: 'repository',
-        language: data.language || 'Unknown',
-        stars: data.stargazers_count,
-        lastUpdated: `${Math.floor((Date.now() - new Date(data.updated_at).getTime()) / (1000 * 60 * 60 * 24))} days ago`,
-        issues: [
-          'Outdated dependencies detected (security risk)',
-          'Missing comprehensive documentation',
-          'No CI/CD pipeline configured'
-        ],
-        improvements: [
-          'Add comprehensive README files',
-          'Add security scanning',
-          'Set up CI/CD pipelines',
-          'Implement proper error handling',
-          'Add automated testing suite'
-        ],
-        pricing: {
-          basic: 75,
-          premium: 150,
-          enterprise: 300,
-        },
-        securityScore: Math.floor(Math.random() * 40) + 40,
-        codeQuality: Math.floor(Math.random() * 50) + 30,
-        documentation: Math.floor(Math.random() * 60) + 20,
-      }];
-    } else {
-      // Username search - validate user exists first
-      const userResponse = await fetch(`${GITHUB_API_BASE}/users/${searchQuery}`, {
-        headers: {
-          'Accept': 'application/vnd.github.v3+json',
-        },
-      });
-
-      if (!userResponse.ok) {
-        if (userResponse.status === 404) {
-          throw new Error(`GitHub user '${searchQuery}' not found`);
-        }
-        throw new Error(`Failed to fetch user: ${userResponse.statusText}`);
-      }
-      
-      const reposResponse = await fetch(`${GITHUB_API_BASE}/users/${searchQuery}/repos?sort=updated&per_page=10`, {
-        headers: {
-          'Accept': 'application/vnd.github.v3+json',
-        },
-      });
-
-      if (!reposResponse.ok) {
-        throw new Error(`Failed to fetch repositories: ${reposResponse.statusText}`);
-      }
-
-      const repos = await reposResponse.json();
-      
-      if (repos.length === 0) {
-        throw new Error(`No public repositories found for user '${searchQuery}'`);
-      }
-      
-      return repos.map((repo: any) => ({
-        id: repo.id.toString(),
-        name: repo.full_name,
-        description: repo.description || 'No description available',
-        category: 'repository',
-        language: repo.language || 'Unknown',
-        stars: repo.stargazers_count,
-        lastUpdated: `${Math.floor((Date.now() - new Date(repo.updated_at).getTime()) / (1000 * 60 * 60 * 24))} days ago`,
-        issues: [
-          'Outdated dependencies detected (security risk)',
-          'Missing comprehensive documentation',
-          'No CI/CD pipeline configured'
-        ],
-        improvements: [
-          'Add comprehensive README files',
-          'Add security scanning',
-          'Set up CI/CD pipelines',
-          'Implement proper error handling',
-          'Add automated testing suite'
-        ],
-        pricing: {
-          basic: 75,
-          premium: 150,
-          enterprise: 300,
-        },
-        securityScore: Math.floor(Math.random() * 40) + 40,
-        codeQuality: Math.floor(Math.random() * 50) + 30,
-        documentation: Math.floor(Math.random() * 60) + 20,
-      }));
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || 'Failed to analyze repository');
     }
+
+    const data = await response.json();
+
+    const result: AnalysisResult = {
+      id: data.repo,
+      name: data.repo,
+      description: data.description || 'No description available',
+      category: 'repository',
+      language: data.languages?.[0] || 'Unknown',
+      stars: data.stars ?? 0,
+      forks: data.forks ?? 0,
+      openIssues: data.openIssues ?? 0,
+      lastUpdated: `${Math.floor((Date.now() - new Date(data.lastUpdated).getTime()) / (1000 * 60 * 60 * 24))} days ago`,
+      issues: [`Repository has ${data.openIssues ?? 0} open issues`],
+      improvements: data.improvements || [],
+      pricing: {
+        basic: 75,
+        premium: 150,
+        enterprise: 300,
+      },
+      securityScore: data.scores?.securityScore ?? 0,
+      codeQuality: data.scores?.codeQuality ?? 0,
+      documentation: data.scores?.documentation ?? 0,
+    };
+
+    return [result];
   } catch (error) {
-    console.error('GitHub API Error:', error);
-    
-    // Re-throw the error with the original message for better user feedback
+    console.error('API Error:', error);
     if (error instanceof Error) {
       throw error;
     }
-    
-    throw new Error('Failed to connect to GitHub API');
+    throw new Error('Failed to analyze repository');
   }
 };
 

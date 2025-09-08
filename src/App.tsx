@@ -12,6 +12,8 @@ export type AnalysisResult = {
   category: string;
   language: string;
   stars: number;
+  forks: number;
+  openIssues: number;
   lastUpdated: string;
   issues: string[];
   improvements: string[];

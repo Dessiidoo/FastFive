@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ArrowLeft, Star, AlertTriangle, CheckCircle, TrendingUp, Shield, Code, FileText, Filter, Settings } from 'lucide-react';
+import { ArrowLeft, Star, AlertTriangle, CheckCircle, TrendingUp, Shield, Code, FileText, Filter, Settings, GitFork } from 'lucide-react';
 import { AnalysisResult } from '../App';
 
 interface ResultsPageProps {
@@ -45,7 +45,9 @@ const ResultsPage: React.FC<ResultsPageProps> = ({ results, searchQuery, onBack 
             </button>
             <div className="text-right">
               <h1 className="text-3xl font-bold text-white">{selectedRepo.name}</h1>
-              <p className="text-gray-400">{selectedRepo.language} • {selectedRepo.stars} stars</p>
+              <p className="text-gray-400">
+                {selectedRepo.language} • {selectedRepo.stars} stars • {selectedRepo.forks} forks • {selectedRepo.openIssues} open issues
+              </p>
             </div>
           </div>
 
@@ -109,7 +111,7 @@ const ResultsPage: React.FC<ResultsPageProps> = ({ results, searchQuery, onBack 
               <div className="bg-gradient-to-br from-gray-900/90 to-black/90 border border-red-500/20 rounded-2xl p-6">
                 <h3 className="text-xl font-bold text-white mb-6 flex items-center">
                   <AlertTriangle className="w-6 h-6 text-red-400 mr-3" />
-                  Critical Issues
+                  Critical Issues ({selectedRepo.openIssues})
                 </h3>
                 <div className="space-y-3">
                   {selectedRepo.issues.map((issue, index) => (
@@ -207,9 +209,19 @@ const ResultsPage: React.FC<ResultsPageProps> = ({ results, searchQuery, onBack 
                   </h3>
                   <p className="text-gray-400 text-sm">{repo.category} • {repo.language}</p>
                 </div>
-                <div className="flex items-center space-x-1 text-yellow-400">
-                  <Star className="w-4 h-4" />
-                  <span className="font-medium">{repo.stars}</span>
+                <div className="flex items-center space-x-3">
+                  <div className="flex items-center space-x-1 text-yellow-400">
+                    <Star className="w-4 h-4" />
+                    <span className="font-medium">{repo.stars}</span>
+                  </div>
+                  <div className="flex items-center space-x-1 text-gray-400">
+                    <GitFork className="w-4 h-4" />
+                    <span className="font-medium">{repo.forks}</span>
+                  </div>
+                  <div className="flex items-center space-x-1 text-red-400">
+                    <AlertTriangle className="w-4 h-4" />
+                    <span className="font-medium">{repo.openIssues}</span>
+                  </div>
                 </div>
               </div>
 
@@ -241,7 +253,7 @@ const ResultsPage: React.FC<ResultsPageProps> = ({ results, searchQuery, onBack 
               <div className="mb-4">
                 <div className="flex items-center space-x-2 mb-2">
                   <AlertTriangle className="w-4 h-4 text-red-400" />
-                  <span className="text-sm font-medium text-red-400">{repo.issues.length} Issues</span>
+                  <span className="text-sm font-medium text-red-400">{repo.openIssues} Issues</span>
                 </div>
                 <div className="flex items-center space-x-2">
                   <CheckCircle className="w-4 h-4 text-green-400" />
@@ -270,7 +282,7 @@ const ResultsPage: React.FC<ResultsPageProps> = ({ results, searchQuery, onBack 
             </div>
             <div>
               <div className="text-3xl font-black text-red-400 mb-2">
-                {results.reduce((acc, repo) => acc + repo.issues.length, 0)}
+                {results.reduce((acc, repo) => acc + repo.openIssues, 0)}
               </div>
               <div className="text-gray-300">Total Issues Found</div>
             </div>

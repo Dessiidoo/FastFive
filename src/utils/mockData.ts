@@ -77,6 +77,8 @@ export const generateMockResults = (searchQuery: string): AnalysisResult[] => {
       category,
       language,
       stars: Math.floor(Math.random() * 1000) + 10,
+      forks: Math.floor(Math.random() * 500),
+      openIssues: Math.floor(Math.random() * 100),
       lastUpdated: `${Math.floor(Math.random() * 30) + 1} days ago`,
       issues: [...new Set(issues)],
       improvements: [...new Set(improvements)],

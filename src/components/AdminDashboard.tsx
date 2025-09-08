@@ -257,7 +257,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ onLogout, analysisResul
                     </div>
 
                     <div className="flex items-center justify-between text-sm">
-                      <span className="text-red-300">{repo.issues.length} issues</span>
+                      <span className="text-red-300">{repo.openIssues} issues</span>
                       <span className="text-green-300">{repo.improvements.length} improvements</span>
                       <span className="text-yellow-400 font-bold">${repo.pricing.basic}+</span>
                     </div>
