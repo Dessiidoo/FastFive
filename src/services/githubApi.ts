@@ -1,6 +1,12 @@
 import { AnalysisResult } from '../App';
 
 const GITHUB_API_BASE = 'https://api.github.com';
+const token = import.meta.env.VITE_GITHUB_TOKEN;
+
+const defaultHeaders: HeadersInit = {
+  'Accept': 'application/vnd.github.v3+json',
+  ...(token ? { Authorization: `Bearer ${token}` } : {}),
+};
 
 interface GitHubUser {
   login: string;
@@ -70,9 +76,7 @@ export const applyRepositoryFixes = async (_repoFullName: string, _improvements:
 
 export const fetchGitHubUser = async (username: string): Promise<GitHubUser> => {
   const response = await fetch(`${GITHUB_API_BASE}/users/${username}`, {
-    headers: {
-      'Accept': 'application/vnd.github.v3+json',
-    },
+    headers: defaultHeaders,
   });
   
   if (!response.ok) {
@@ -106,9 +110,7 @@ export const analyzeRealRepositories = async (searchQuery: string): Promise<Anal
       }
       
       const response = await fetch(`${GITHUB_API_BASE}/repos/${owner}/${repo}`, {
-        headers: {
-          'Accept': 'application/vnd.github.v3+json',
-        },
+        headers: defaultHeaders,
       });
 
       if (!response.ok) {
@@ -176,9 +178,7 @@ export const analyzeRealRepositories = async (searchQuery: string): Promise<Anal
     } else {
       // Username search - validate user exists first
       const userResponse = await fetch(`${GITHUB_API_BASE}/users/${searchQuery}`, {
-        headers: {
-          'Accept': 'application/vnd.github.v3+json',
-        },
+        headers: defaultHeaders,
       });
 
       if (!userResponse.ok) {
@@ -189,9 +189,7 @@ export const analyzeRealRepositories = async (searchQuery: string): Promise<Anal
       }
       
       const reposResponse = await fetch(`${GITHUB_API_BASE}/users/${searchQuery}/repos?sort=updated&per_page=10`, {
-        headers: {
-          'Accept': 'application/vnd.github.v3+json',
-        },
+        headers: defaultHeaders,
       });
 
       if (!reposResponse.ok) {
@@ -275,9 +273,7 @@ export const analyzeRealRepositories = async (searchQuery: string): Promise<Anal
 
 export const fetchUserRepositories = async (username: string): Promise<GitHubRepo[]> => {
   const response = await fetch(`${GITHUB_API_BASE}/users/${username}/repos?per_page=100&sort=updated`, {
-    headers: {
-      'Accept': 'application/vnd.github.v3+json',
-    },
+    headers: defaultHeaders,
   });
   
   if (!response.ok) {
