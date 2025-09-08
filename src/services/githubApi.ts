@@ -28,7 +28,11 @@ interface GitHubRepo {
   default_branch: string;
 }
 
-export const applyRepositoryFixes = async (repoFullName: string, improvements: string[]): Promise<{
+interface GitHubIssue {
+  title: string;
+}
+
+export const applyRepositoryFixes = async (_repoFullName: string, _improvements: string[]): Promise<{
   success: boolean;
   appliedFixes: string[];
   errors: string[];
@@ -37,6 +41,10 @@ export const applyRepositoryFixes = async (repoFullName: string, improvements: s
   const errors: string[] = [];
 
   try {
+    // Mark parameters as used to satisfy linting rules
+    void _repoFullName;
+    void _improvements;
+
     // Simulate applying fixes for demo purposes
     await new Promise(resolve => setTimeout(resolve, 2000));
     
@@ -112,35 +120,59 @@ export const analyzeRealRepositories = async (searchQuery: string): Promise<Anal
 
       const data = await response.json();
       
-      return [{
-        id: data.id.toString(),
-        name: data.full_name,
-        description: data.description || 'No description available',
-        category: 'repository',
-        language: data.language || 'Unknown',
-        stars: data.stargazers_count,
-        lastUpdated: `${Math.floor((Date.now() - new Date(data.updated_at).getTime()) / (1000 * 60 * 60 * 24))} days ago`,
-        issues: [
-          'Outdated dependencies detected (security risk)',
-          'Missing comprehensive documentation',
-          'No CI/CD pipeline configured'
-        ],
-        improvements: [
-          'Add comprehensive README files',
-          'Add security scanning',
-          'Set up CI/CD pipelines',
-          'Implement proper error handling',
-          'Add automated testing suite'
-        ],
-        pricing: {
-          basic: 75,
-          premium: 150,
-          enterprise: 300,
+      // Fetch up to 5 open issue titles for the repository
+      const issuesResponse = await fetch(
+        `${GITHUB_API_BASE}/repos/${owner}/${repo}/issues?state=open&per_page=${Math.min(
+          data.open_issues_count,
+          5
+        )}`,
+        {
+          headers: {
+            Accept: 'application/vnd.github.v3+json',
+          },
+        }
+      );
+
+      const issuesData: GitHubIssue[] = issuesResponse.ok ? await issuesResponse.json() : [];
+      const issues = issuesData.map((issue: GitHubIssue) => issue.title);
+
+      // Basic improvement suggestions derived from repository data
+      const improvements: string[] = [];
+      if (!data.description) {
+        improvements.push('Add a repository description');
+      }
+      if (data.open_issues_count > 0) {
+        improvements.push('Resolve open issues');
+      }
+      if (data.stargazers_count < 5) {
+        improvements.push('Increase project visibility to gain more stars');
+      }
+
+      const basePrice = Math.max(50, Math.round(data.size / 100) + data.open_issues_count);
+
+      return [
+        {
+          id: data.id.toString(),
+          name: data.full_name,
+          description: data.description || 'No description available',
+          category: 'repository',
+          language: data.language || 'Unknown',
+          stars: data.stargazers_count,
+          lastUpdated: `${Math.floor(
+            (Date.now() - new Date(data.updated_at).getTime()) / (1000 * 60 * 60 * 24)
+          )} days ago`,
+          issues,
+          improvements,
+          pricing: {
+            basic: basePrice,
+            premium: basePrice * 2,
+            enterprise: basePrice * 4,
+          },
+          securityScore: Math.max(0, 100 - data.open_issues_count),
+          codeQuality: Math.min(100, Math.round((data.forks_count + data.stargazers_count) / 2)),
+          documentation: data.description ? 80 : 40,
         },
-        securityScore: Math.floor(Math.random() * 40) + 40,
-        codeQuality: Math.floor(Math.random() * 50) + 30,
-        documentation: Math.floor(Math.random() * 60) + 20,
-      }];
+      ];
     } else {
       // Username search - validate user exists first
       const userResponse = await fetch(`${GITHUB_API_BASE}/users/${searchQuery}`, {
@@ -172,35 +204,62 @@ export const analyzeRealRepositories = async (searchQuery: string): Promise<Anal
         throw new Error(`No public repositories found for user '${searchQuery}'`);
       }
       
-      return repos.map((repo: any) => ({
-        id: repo.id.toString(),
-        name: repo.full_name,
-        description: repo.description || 'No description available',
-        category: 'repository',
-        language: repo.language || 'Unknown',
-        stars: repo.stargazers_count,
-        lastUpdated: `${Math.floor((Date.now() - new Date(repo.updated_at).getTime()) / (1000 * 60 * 60 * 24))} days ago`,
-        issues: [
-          'Outdated dependencies detected (security risk)',
-          'Missing comprehensive documentation',
-          'No CI/CD pipeline configured'
-        ],
-        improvements: [
-          'Add comprehensive README files',
-          'Add security scanning',
-          'Set up CI/CD pipelines',
-          'Implement proper error handling',
-          'Add automated testing suite'
-        ],
-        pricing: {
-          basic: 75,
-          premium: 150,
-          enterprise: 300,
-        },
-        securityScore: Math.floor(Math.random() * 40) + 40,
-        codeQuality: Math.floor(Math.random() * 50) + 30,
-        documentation: Math.floor(Math.random() * 60) + 20,
-      }));
+      return Promise.all(
+        (repos as GitHubRepo[]).map(async (repo: GitHubRepo) => {
+          const issuesResponse = await fetch(
+            `${GITHUB_API_BASE}/repos/${repo.full_name}/issues?state=open&per_page=${Math.min(
+              repo.open_issues_count,
+              5
+            )}`,
+            {
+              headers: {
+                Accept: 'application/vnd.github.v3+json',
+              },
+            }
+          );
+
+          const issuesData: GitHubIssue[] = issuesResponse.ok ? await issuesResponse.json() : [];
+          const issues = issuesData.map((issue: GitHubIssue) => issue.title);
+
+          const improvements: string[] = [];
+          if (!repo.description) {
+            improvements.push('Add a repository description');
+          }
+          if (repo.open_issues_count > 0) {
+            improvements.push('Resolve open issues');
+          }
+          if (repo.stargazers_count < 5) {
+            improvements.push('Increase project visibility to gain more stars');
+          }
+
+          const basePrice = Math.max(50, Math.round(repo.size / 100) + repo.open_issues_count);
+
+          return {
+            id: repo.id.toString(),
+            name: repo.full_name,
+            description: repo.description || 'No description available',
+            category: 'repository',
+            language: repo.language || 'Unknown',
+            stars: repo.stargazers_count,
+            lastUpdated: `${Math.floor(
+              (Date.now() - new Date(repo.updated_at).getTime()) / (1000 * 60 * 60 * 24)
+            )} days ago`,
+            issues,
+            improvements,
+            pricing: {
+              basic: basePrice,
+              premium: basePrice * 2,
+              enterprise: basePrice * 4,
+            },
+            securityScore: Math.max(0, 100 - repo.open_issues_count),
+            codeQuality: Math.min(
+              100,
+              Math.round((repo.forks_count + repo.stargazers_count) / 2)
+            ),
+            documentation: repo.description ? 80 : 40,
+          };
+        })
+      );
     }
   } catch (error) {
     console.error('GitHub API Error:', error);
