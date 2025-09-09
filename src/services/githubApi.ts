@@ -41,49 +41,17 @@ export const analyzeRealRepositories = async (searchQuery: string): Promise<Anal
     const response = await fetch('/api/analyze', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
+      codex/modify-client-to-post-repository-target
+      body: JSON.stringify({ target: searchQuery }),
+
       body: JSON.stringify({ target: searchQuery })
+
     });
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.error || response.statusText);
-    }
 
-    const data = await response.json();
 
-    const lastUpdated = data.lastUpdated
-      ? `${Math.floor((Date.now() - new Date(data.lastUpdated).getTime()) / (1000 * 60 * 60 * 24))} days ago`
-      : 'Unknown';
-
-    const basePrice = Math.max(50, (data.openIssues ?? 0) + (data.forks ?? 0));
-
-    return [
-      {
-        id: data.repo,
-        name: data.repo,
-        description: data.description || 'No description available',
-        category: 'repository',
-        language: data.languages?.[0] || 'Unknown',
-        stars: data.stars ?? 0,
-        lastUpdated,
-        issues: [],
-        improvements: data.improvements || [],
-        pricing: {
-          basic: basePrice,
-          premium: basePrice * 2,
-          enterprise: basePrice * 4,
-        },
-        securityScore: data.scores?.securityScore ?? 0,
-        codeQuality: data.scores?.codeQuality ?? 0,
-        documentation: data.scores?.documentation ?? 0,
-      },
-    ];
-  } catch (error) {
-    console.error('Analysis API Error:', error);
-
-    if (error instanceof Error) {
-      throw error;
-    }
 
     throw new Error('Failed to connect to analysis API');
   }

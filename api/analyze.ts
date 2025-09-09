@@ -11,7 +11,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (!target) return res.status(400).json({ error: 'Missing "target" (owner/repo or full URL)' });
 
     const ghToken = process.env.GITHUB_TOKEN;
-    const octokit = new Octokit(ghToken ? { auth: ghToken } : {});
+    if (!ghToken) {
+      return res.status(500).json({ error: 'GITHUB_TOKEN is not configured' });
+    }
+    const octokit = new Octokit({ auth: ghToken });
 
     const repoPath = extractRepo(target);
     if (!repoPath.includes('/')) return res.status(400).json({ error: 'Use format owner/repo' });
@@ -43,7 +46,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (!repoInfo.data.has_projects) improvements.push('Enable Projects (task boards)');
 
     return res.json({
-      mode: ghToken ? 'real' : 'unauthenticated', // still real, but lower rate limit
+      mode: 'real',
       repo: repoInfo.data.full_name,
       description: repoInfo.data.description,
       stars,
