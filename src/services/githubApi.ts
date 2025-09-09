@@ -44,7 +44,7 @@ export const analyzeRealRepositories = async (searchQuery: string): Promise<Anal
       codex/modify-client-to-post-repository-target
       body: JSON.stringify({ target: searchQuery }),
 
-      body: JSON.stringify({ target: searchQuery })
+      
 
     });
 
