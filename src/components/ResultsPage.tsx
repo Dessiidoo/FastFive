@@ -85,25 +85,32 @@ const ResultsPage: React.FC<ResultsPageProps> = ({ results, searchQuery, onBack 
                 </div>
               </div>
 
-              {/* Pricing */}
-              <div className="bg-gradient-to-br from-yellow-500/20 to-yellow-600/20 border border-yellow-500/30 rounded-2xl p-6">
-                <h3 className="text-xl font-bold text-white mb-6">Improvement Pricing</h3>
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-gray-300">Basic</span>
-                    <span className="text-yellow-400 font-bold">${selectedRepo.pricing.basic}</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-gray-300">Premium</span>
-                    <span className="text-yellow-400 font-bold">${selectedRepo.pricing.premium}</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-gray-300">Enterprise</span>
-                    <span className="text-yellow-400 font-bold">${selectedRepo.pricing.enterprise}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
+              {/* Repo Stats */}
+<div className="bg-gradient-to-br from-blue-500/20 to-blue-600/20 border border-blue-500/30 rounded-2xl p-6">
+  <h3 className="text-xl font-bold text-white mb-6">Repository Stats</h3>
+  <div className="space-y-3">
+    <div className="flex items-center justify-between">
+      <span className="text-gray-300">Stars</span>
+      <span className="text-blue-400 font-bold">{selectedRepo.stars}</span>
+    </div>
+    <div className="flex items-center justify-between">
+      <span className="text-gray-300">Forks</span>
+      <span className="text-blue-400 font-bold">{selectedRepo.forks}</span>
+    </div>
+    <div className="flex items-center justify-between">
+      <span className="text-gray-300">Open Issues</span>
+      <span className="text-blue-400 font-bold">{selectedRepo.openIssues}</span>
+    </div>
+    <div className="flex items-center justify-between">
+      <span className="text-gray-300">Language</span>
+      <span className="text-blue-400 font-bold">{selectedRepo.language}</span>
+    </div>
+    <div className="flex items-center justify-between">
+      <span className="text-gray-300">Last Updated</span>
+      <span className="text-blue-400 font-bold">{new Date(selectedRepo.lastUpdated).toLocaleDateString()}</span>
+    </div>
+  </div>
+</div>
 
             {/* Issues and Improvements */}
             <div className="lg:col-span-2 space-y-6">
@@ -261,17 +268,7 @@ const ResultsPage: React.FC<ResultsPageProps> = ({ results, searchQuery, onBack 
                 </div>
               </div>
 
-              {/* Pricing Preview */}
-              <div className="border-t border-gray-700 pt-4">
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-400 text-sm">Starting from</span>
-                  <span className="text-yellow-400 font-bold">${repo.pricing.basic}</span>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-
+            
         {/* Summary Stats */}
         <div className="mt-12 bg-gradient-to-br from-yellow-500/20 to-yellow-600/20 border border-yellow-500/30 rounded-2xl p-8">
           <h2 className="text-2xl font-bold text-white mb-6 text-center">Analysis Summary</h2>
