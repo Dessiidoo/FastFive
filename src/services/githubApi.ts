@@ -19,7 +19,7 @@ export const applyRepositoryFixes = async (
 // Calls our backend API to analyze real repositories
 export const analyzeRealRepositories = async (
   searchQuery: string
-): Promise<AnalysisResult> => {
+): Promise<AnalysisResult[]> => {
   const res = await fetch('/api/analyze', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -31,5 +31,25 @@ export const analyzeRealRepositories = async (
     throw new Error(err?.error || 'Failed to analyze repository');
   }
 
-  return res.json();
+  const data = await res.json();
+
+  const mappedResult: AnalysisResult = {
+    id: data.id ?? searchQuery,
+    name: data.name ?? '',
+    description: data.description ?? '',
+    category: data.category ?? 'General',
+    language: data.language ?? '',
+    stars: data.stars ?? 0,
+    forks: data.forks ?? 0,
+    openIssues: data.openIssues ?? 0,
+    lastUpdated: data.lastUpdated ?? new Date().toISOString(),
+    issues: data.issues ?? [],
+    improvements: data.improvements ?? [],
+    pricing: data.pricing ?? { basic: 0, premium: 0, enterprise: 0 },
+    securityScore: data.scores?.securityScore ?? data.securityScore ?? 0,
+    codeQuality: data.scores?.codeQuality ?? data.codeQuality ?? 0,
+    documentation: data.scores?.documentation ?? data.documentation ?? 0,
+  };
+
+  return [mappedResult];
 };
